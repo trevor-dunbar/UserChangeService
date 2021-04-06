@@ -3,12 +3,7 @@ const sinon = require('sinon');
 const changesController = require('../controllers/changeController')
 
 describe('changes controller tests', () => {
-    // describe('Get changes tests', () => {
-    //     it('should return a list of changes'() => {
-
-    //     })
-    // })
-    describe('post Change tests', () => {
+      describe('post Change tests', () => {
         it('should post a book', () => {
             //given
             const req = {
@@ -54,6 +49,36 @@ describe('changes controller tests', () => {
             //then
             res.status.calledWith(400).should.equal(true);
             res.send.calledWith('guid is required').should.equal(true)
+        })
+    })
+    describe('Get changes tests', () => {
+        it('should return a list of changes', () => {
+            //given
+            const req = {
+                query: {bloodPressure: 42}
+            };
+
+            const res = {
+                send: sinon.spy(),
+                json: sinon.spy()
+            }
+
+            const dbResponse = [{bloodPressure: 42, _id: 123}];
+
+            const Change = require('../models/changes')
+            sinon.stub(Change, 'find');
+
+            Change.find.yields(null, dbResponse);
+
+            const controller = changesController(Change);
+
+            //when
+            controller.getChanges(req, res)
+
+            //then
+            res.json.calledWith(dbResponse).should.equal(true);
+
+            Change.find.restore();
         })
     })
 })
