@@ -35,7 +35,7 @@ function changesController(Change) {
     }
 
     function updateChange(req, res) {
-        Change.findOneAndUpdate(req.params.changeId, req.body, (err, change) => {
+        Change.findOneAndUpdate({_id: req.params.changeId}, dotify(req.body), (err, change) => {
             if (err) {
                 return res.send(err)
             }
@@ -55,5 +55,31 @@ function changesController(Change) {
 
     return { postChange, getChanges, getChangeById, updateChange, deleteChange };
 }
+
+/**
+ * Converts an object to a dotified object.
+ *
+ * @param obj         Object
+ * @returns           Dotified Object
+ */
+function dotify(obj) {
+
+    const res = {};
+  
+    function recurse(obj, current) {
+      for (const key in obj) {
+        const value = obj[key];
+        const newKey = (current ? current + '.' + key : key);
+        if (value && typeof value === 'object') {
+          recurse(value, newKey);
+        } else {
+          res[newKey] = value;
+        }
+      }
+    }
+  
+    recurse(obj);
+    return res;
+  }
 
 module.exports = changesController;
