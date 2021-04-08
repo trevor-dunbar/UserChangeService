@@ -1,0 +1,214 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "REST API",
+    "description": ""
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [],
+  "schemes": [
+    "http"
+  ],
+  "consumes": [],
+  "produces": [],
+  "paths": {
+    "/changes": {
+      "get": {
+        "tags": [],
+        "description": "Get a list of Changes",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "guid"
+          },
+          {
+            "in": "query",
+            "name": "condition"
+          },
+          {
+            "in": "query",
+            "name": "dateTime"
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ChangeResponse"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [],
+        "description": "Pass a change",
+        "parameters": [
+          {
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ChangeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/PostChangeResponse"
+            }
+          }
+        }
+      }
+    },
+    "/changes/{changeId}": {
+      "put": {
+        "tags": [],
+        "description": "Give an Object ID in the Path, and whichever fields you want updated in the Body. If a field is not provided it will not be updated",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectId",
+            "type": "string",
+            "description": "A Mongo Db Object ID",
+            "example": "606c9b0bfbe9bc75a4d2ca0e"
+          },
+          {
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ChangeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "string",
+              "example": "document 606cbce4cabc5b857ca98e1e has been updated"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectId",
+            "type": "string",
+            "description": "A Mongo Db Object ID",
+            "example": "606c9b0bfbe9bc75a4d2ca0e"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "object was deleted"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Measurements": {
+      "type": "object",
+      "description": "Any JSON which represents Changes",
+      "example": {
+        "bloodPressure": [
+          {
+            "pressureLevel": 123,
+            "time": "12:00:000T00:00:000"
+          }
+        ]
+      }
+    },
+    "ChangeRequest": {
+      "type": "object",
+      "required": [
+        "guid",
+        "conditions"
+      ],
+      "properties": {
+        "guid": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ConditionMeasurements"
+          }
+        }
+      }
+    },
+    "ConditionMeasurements": {
+      "type": "object",
+      "required": ["condition, measurements"],
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "measurements": {
+          "$ref": "#/definitions/Measurements"
+        }
+      }
+    },
+    "PostChangeResponse": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "Mongo DB Object ID + Primary Key. Hexidecimal String which contains a timestamp"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string",
+          "example": "Diabetes:Type1"
+        },
+        "measurements": {
+          "type": "object",
+          "description": "Any JSON which represents Changes",
+          "example": {
+            "bloodPressure": [
+              {
+                "pressureLevel": 123,
+                "time": "12:00:000T00:00:000"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ChangeResponse": {
+      "type": "object",
+      "example":{
+        "guid": "abc123",
+        "diabetes": {
+          "dailyMeasurements": [{
+            "bloodPressure": [
+              {
+                "pressureLevel": 123,
+                "time": "12:00:000T00:00:000"
+              }
+            ]
+          }],
+          "weeklyMeasurements": [{
+            "bloodPressure": [
+              {
+                "pressureLevel": 123,
+                "time": "12:00:000T00:00:000"
+              }
+            ]
+          }]
+        },
+        "heartDisease": {
+          "dailyMeasurements": [],
+          "weeklyMeasurements": []
+        }
+      }
+    }
+  }
+}

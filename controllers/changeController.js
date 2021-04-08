@@ -17,6 +17,8 @@ function changesController(Change) {
 
     function getChanges(req, res) {
         const { query } = req;
+        // const conditions = ['diabetes', 'hypertension']
+        //logic here
         Change.find(query, (err, changes) => {
             if (err) {
                 return res.send(err)
@@ -35,21 +37,22 @@ function changesController(Change) {
     }
 
     function updateChange(req, res) {
-        Change.findOneAndUpdate({_id: req.params.changeId}, dotify(req.body), (err, change) => {
+
+        Change.findOneAndUpdate({guid: req.query.guid, condition: req.query.condition}, dotify(req.body), (err, change) => {
             if (err) {
                 return res.send(err)
             }
 
-            return res.json(`document ${req.params.changeId} has been updated`)
+            return res.json('document updated')
         });
     }
 
     function deleteChange(req, res) {
-        Change.findByIdAndDelete(req.params.changeId, (err) => {
+        Change.findByIdAndDelete(req.params.changeId, (err, doc) => {
             if (err) {
                 return res.send(err)
             }
-            return res.status(204)
+            return res.status(204).send();
         })
     }
 

@@ -1,0 +1,22 @@
+// {
+//     "condition": "diabetes",
+//     "guid": "123",
+//     "measurements": [
+//         {bloodSugar: 120, time: 12:00 Friday,  },
+//         {"bloodSugar"},
+//         {},
+//         {},
+//         {},
+//         {},
+//         {}
+//     ]
+
+// }
+
+
+// {
+//     "condition": "diabetes",
+//     "guid": "123",
+//     "measurement": 
+//         {bloodSugar: 120, time: 12:00 Friday },
+// }
