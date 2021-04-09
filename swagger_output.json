@@ -26,10 +26,6 @@
           {
             "in": "query",
             "name": "condition"
-          },
-          {
-            "in": "query",
-            "name": "dateTime"
           }
         ],
         "responses": {
@@ -61,19 +57,18 @@
             }
           }
         }
-      }
-    },
-    "/changes/{changeId}": {
+      },
       "put": {
         "tags": [],
         "description": "Give an Object ID in the Path, and whichever fields you want updated in the Body. If a field is not provided it will not be updated",
         "parameters": [
           {
-            "in": "path",
-            "name": "objectId",
-            "type": "string",
-            "description": "A Mongo Db Object ID",
-            "example": "606c9b0bfbe9bc75a4d2ca0e"
+            "in": "query",
+            "name": "guid"
+          },
+          {
+            "in": "query",
+            "name": "condition"
           },
           {
             "in": "body",
@@ -86,7 +81,7 @@
           "200": {
             "schema": {
               "type": "string",
-              "example": "document 606cbce4cabc5b857ca98e1e has been updated"
+              "example": "document updated"
             }
           }
         }
@@ -96,11 +91,12 @@
         "description": "",
         "parameters": [
           {
-            "in": "path",
-            "name": "objectId",
-            "type": "string",
-            "description": "A Mongo Db Object ID",
-            "example": "606c9b0bfbe9bc75a4d2ca0e"
+            "in": "query",
+            "name": "guid"
+          },
+          {
+            "in": "query",
+            "name": "condition"
           }
         ],
         "responses": {
@@ -144,7 +140,10 @@
     },
     "ConditionMeasurements": {
       "type": "object",
-      "required": ["condition, measurements"],
+      "required": [
+        "condition", 
+        "measurements"
+      ],
       "properties": {
         "condition": {
           "type": "string"
@@ -157,10 +156,6 @@
     "PostChangeResponse": {
       "type": "object",
       "properties": {
-        "_id": {
-          "type": "string",
-          "description": "Mongo DB Object ID + Primary Key. Hexidecimal String which contains a timestamp"
-        },
         "guid": {
           "type": "string"
         },

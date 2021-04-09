@@ -1,44 +1,38 @@
+const changeHelper = require('../helper/changeHelper');
+
 function changesController(Change) {
 
     function postChange(req, res) {
-        if (req.body.guid) {
-            const change = new Change(req.body);
+        const { guid, conditions } = req.body
+        if (guid && conditions) {
 
-            change.save((err) => {
-                if (err) return res.send(err);
-            });
-
-            res.status(201)
-            return res.json(change);
+            conditions.forEach((condition) => { changeHelper.saveRecordForCondition(Change, guid, condition, res) })
+            return res.status(201).send();
         }
         res.status(400)
-        return res.send('guid is required');
+        return res.send('guid and condition are required');
     }
 
     function getChanges(req, res) {
         const { query } = req;
-        // const conditions = ['diabetes', 'hypertension']
-        //logic here
+        const response = { guid: query.guid };
         Change.find(query, (err, changes) => {
             if (err) {
                 return res.send(err)
             }
-            return res.json(changes);
+
+            changes.forEach((change) => {
+                changeHelper.buildResponseForCondition(change, response)
+            })
+
+            return res.json(response);
         });
     }
 
-    function getChangeById(req, res) {
-        Change.findById(req.params.changeId, (err, change) => {
-            if (err) {
-                return res.send(err)
-            }
-            return res.json(change);
-        });
-    }
 
     function updateChange(req, res) {
 
-        Change.findOneAndUpdate({guid: req.query.guid, condition: req.query.condition}, dotify(req.body), (err, change) => {
+        Change.findOneAndUpdate({ guid: req.query.guid, condition: req.query.condition }, dotify(req.body), (err, change) => {
             if (err) {
                 return res.send(err)
             }
@@ -56,7 +50,7 @@ function changesController(Change) {
         })
     }
 
-    return { postChange, getChanges, getChangeById, updateChange, deleteChange };
+    return { postChange, getChanges, updateChange, deleteChange };
 }
 
 /**
@@ -68,21 +62,21 @@ function changesController(Change) {
 function dotify(obj) {
 
     const res = {};
-  
+
     function recurse(obj, current) {
-      for (const key in obj) {
-        const value = obj[key];
-        const newKey = (current ? current + '.' + key : key);
-        if (value && typeof value === 'object') {
-          recurse(value, newKey);
-        } else {
-          res[newKey] = value;
+        for (const key in obj) {
+            const value = obj[key];
+            const newKey = (current ? current + '.' + key : key);
+            if (value && typeof value === 'object') {
+                recurse(value, newKey);
+            } else {
+                res[newKey] = value;
+            }
         }
-      }
     }
-  
+
     recurse(obj);
     return res;
-  }
+}
 
 module.exports = changesController;
