@@ -53,14 +53,15 @@
         "responses": {
           "201": {
             "schema": {
-              "$ref": "#/definitions/PostChangeResponse"
+              "type": "string",
+              "example": "save successful"
             }
           }
         }
       },
       "put": {
         "tags": [],
-        "description": "Give an Object ID in the Path, and whichever fields you want updated in the Body. If a field is not provided it will not be updated",
+        "description": "",
         "parameters": [
           {
             "in": "query",
@@ -71,9 +72,13 @@
             "name": "condition"
           },
           {
+            "in": "query",
+            "name": "dateTime"
+          },
+          {
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ChangeRequest"
+              "$ref": "#/definitions/Measurements"
             }
           }
         ],
@@ -97,11 +102,15 @@
           {
             "in": "query",
             "name": "condition"
+          },
+          {
+            "in": "query",
+            "name": "dateTime"
           }
         ],
         "responses": {
-          "204": {
-            "description": "object was deleted"
+          "200": {
+            "description": "document deleted"
           }
         }
       }
@@ -141,7 +150,7 @@
     "ConditionMeasurements": {
       "type": "object",
       "required": [
-        "condition", 
+        "condition",
         "measurements"
       ],
       "properties": {
@@ -153,51 +162,31 @@
         }
       }
     },
-    "PostChangeResponse": {
-      "type": "object",
-      "properties": {
-        "guid": {
-          "type": "string"
-        },
-        "condition": {
-          "type": "string",
-          "example": "Diabetes:Type1"
-        },
-        "measurements": {
-          "type": "object",
-          "description": "Any JSON which represents Changes",
-          "example": {
-            "bloodPressure": [
-              {
-                "pressureLevel": 123,
-                "time": "12:00:000T00:00:000"
-              }
-            ]
-          }
-        }
-      }
-    },
     "ChangeResponse": {
       "type": "object",
-      "example":{
+      "example": {
         "guid": "abc123",
         "diabetes": {
-          "dailyMeasurements": [{
-            "bloodPressure": [
-              {
-                "pressureLevel": 123,
-                "time": "12:00:000T00:00:000"
-              }
-            ]
-          }],
-          "weeklyMeasurements": [{
-            "bloodPressure": [
-              {
-                "pressureLevel": 123,
-                "time": "12:00:000T00:00:000"
-              }
-            ]
-          }]
+          "dailyMeasurements": [
+            {
+              "bloodPressure": [
+                {
+                  "pressureLevel": 123,
+                  "time": "12:00:000T00:00:000"
+                }
+              ]
+            }
+          ],
+          "weeklyMeasurements": [
+            {
+              "bloodPressure": [
+                {
+                  "pressureLevel": 123,
+                  "time": "12:00:000T00:00:000"
+                }
+              ]
+            }
+          ]
         },
         "heartDisease": {
           "dailyMeasurements": [],

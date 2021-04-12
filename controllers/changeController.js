@@ -32,51 +32,51 @@ function changesController(Change) {
 
     function updateChange(req, res) {
 
-        Change.findOneAndUpdate({ guid: req.query.guid, condition: req.query.condition }, dotify(req.body), (err, change) => {
+        Change.findOne({ guid: req.query.guid, condition: req.query.condition }, (err, change) => {
             if (err) {
                 return res.send(err)
             }
 
-            return res.json('document updated')
+            const indexOfMeasurementsUpdate = findUpdateIndex(change.measurements, req.query.dateTime)
+            change.measurements[indexOfMeasurementsUpdate] = { ...req.body, createdAt: req.query.dateTime }
+
+
+            change.markModified('measurements');
+            change.save();
+
+            res
+            return res.send('document updated')
         });
     }
 
-    function deleteChange(req, res) {
-        Change.findByIdAndDelete(req.params.changeId, (err, doc) => {
-            if (err) {
-                return res.send(err)
-            }
-            return res.status(204).send();
+
+    function findUpdateIndex(measurements, dateTime) {
+        return measurements.findIndex((measurement) => {
+            return measurement.createdAt === dateTime
         })
     }
 
-    return { postChange, getChanges, updateChange, deleteChange };
-}
-
-/**
- * Converts an object to a dotified object.
- *
- * @param obj         Object
- * @returns           Dotified Object
- */
-function dotify(obj) {
-
-    const res = {};
-
-    function recurse(obj, current) {
-        for (const key in obj) {
-            const value = obj[key];
-            const newKey = (current ? current + '.' + key : key);
-            if (value && typeof value === 'object') {
-                recurse(value, newKey);
-            } else {
-                res[newKey] = value;
+    function deleteChange(req, res) {
+        Change.findOne({ guid: req.query.guid, condition: req.query.condition }, (err, change) => {
+            if (err) {
+                return res.send(err)
             }
-        }
+
+            const indexOfMeasurementsUpdate = findUpdateIndex(change.measurements, req.query.dateTime)
+            const measurementToDelete = change.measurements[indexOfMeasurementsUpdate];
+            if (measurementToDelete.isDeleted){
+                return res.send(404);
+            } 
+            change.measurements[indexOfMeasurementsUpdate] = { ...measurementToDelete, isDeleted: true}
+
+            change.markModified('measurements');
+            change.save();
+
+            return res.json('document deleted')
+        });
     }
 
-    recurse(obj);
-    return res;
+    return { postChange, getChanges, updateChange, deleteChange };
 }
 
 module.exports = changesController;
