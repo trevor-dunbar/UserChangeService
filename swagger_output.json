@@ -52,10 +52,7 @@
         ],
         "responses": {
           "201": {
-            "schema": {
-              "type": "string",
-              "example": "save successful"
-            }
+            "description": "document saved"
           }
         }
       },
@@ -84,10 +81,7 @@
         ],
         "responses": {
           "200": {
-            "schema": {
-              "type": "string",
-              "example": "document updated"
-            }
+            "description": "document updated"
           }
         }
       },
@@ -121,12 +115,16 @@
       "type": "object",
       "description": "Any JSON which represents Changes",
       "example": {
-        "bloodPressure": [
+        "bloodSugar": [
           {
-            "pressureLevel": 123,
-            "time": "12:00:000T00:00:000"
+            "bloodSugarLevel": 123,
+            "time": "2021-04-13T16:36:16.582Z"
           }
-        ]
+        ],
+        "feelings": {
+          "tired": "very",
+          "hungry": "slightly"
+        }
       }
     },
     "ChangeRequest": {
@@ -137,7 +135,8 @@
       ],
       "properties": {
         "guid": {
-          "type": "string"
+          "type": "string",
+          "example": "abc123"
         },
         "conditions": {
           "type": "array",
@@ -155,7 +154,8 @@
       ],
       "properties": {
         "condition": {
-          "type": "string"
+          "type": "string",
+          "example": "diabetes"
         },
         "measurements": {
           "$ref": "#/definitions/Measurements"
@@ -169,20 +169,46 @@
         "diabetes": {
           "dailyMeasurements": [
             {
-              "bloodPressure": [
+              "bloodSugar": [
                 {
-                  "pressureLevel": 123,
-                  "time": "12:00:000T00:00:000"
+                  "bloodSugarLevel": 123,
+                  "time": "2021-04-13T16:36:16.582Z"
+                }
+              ],
+              "feelings": [
+                {
+                  "tired": "very",
+                  "hungry": "slightly",
+                  "time": "2021-04-13T16:36:16.582Z"
+                },
+                {
+                  "tired": "slightly",
+                  "time": "2021-04-14T16:36:16.582Z"
                 }
               ]
             }
           ],
           "weeklyMeasurements": [
             {
-              "bloodPressure": [
+              "bloodSugar": [
                 {
-                  "pressureLevel": 123,
-                  "time": "12:00:000T00:00:000"
+                  "bloodSugarLevel": 123,
+                  "time": "2021-04-13T16:36:16.582Z"
+                },
+                {
+                  "bloodSugarLevel": 111,
+                  "time": "2021-04-06T16:36:16.582Z"
+                }
+              ],
+              "feelings": [
+                {
+                  "tired": "very",
+                  "hungry": "slightly",
+                  "time": "2021-04-13T16:36:16.582Z"
+                },
+                {
+                  "tired": "slightly",
+                  "time": "2021-04-14T16:36:16.582Z"
                 }
               ]
             }
