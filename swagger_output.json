@@ -85,7 +85,7 @@
       },
       "delete": {
         "tags": [],
-        "description": "",
+        "description": "send a map with the key being the measurement key for the value you want soft deleted and the value being the measurement you want soft deleted",
         "parameters": [
           {
             "in": "query",
@@ -96,8 +96,13 @@
             "name": "condition"
           },
           {
-            "in": "query",
-            "name": "dateTime"
+            "in": "body",
+            "example": {
+              "bloodSugar": {
+                "bloodSugarLevel": 123,
+                "dateTime": "2021-04-13T16:36:16.582Z"
+              }
+            }
           }
         ],
         "responses": {

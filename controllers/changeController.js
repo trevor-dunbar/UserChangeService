@@ -1,13 +1,21 @@
-const changeHelper = require('../helper/changeHelper');
+const postChangeService = require('../service/postChangeService');
+const getChangeService = require('../service/getChangeService');
+const updateChangeService = require('../service/updateChangeService')
 
 function changesController(Change) {
 
     function postChange(req, res) {
-        const { guid, conditions } = req.body
-        if (guid && conditions) {
+        const { guid } = req.body
+        if (guid) {
+            delete req.body.guid;
 
-            conditions.forEach((condition) => { changeHelper.saveRecordForCondition(Change, guid, condition, res) })
-            return res.status(201).send();
+            const conditions = Object.entries(req.body);
+
+            if (conditions) {
+
+                conditions.forEach((condition) => { postChangeService.saveRecordForCondition(Change, guid, condition, res) })
+                return res.status(201).send();
+            }
         }
         res.status(400)
         return res.send('guid and condition are required');
@@ -22,38 +30,11 @@ function changesController(Change) {
             }
 
             changes.forEach((change) => {
-                changeHelper.buildResponseForCondition(change, response)
+                getChangeService.buildResponseForCondition(change, response)
             })
 
             return res.json(response);
         });
-    }
-
-
-    function updateChange(req, res) {
-
-        Change.findOne({ guid: req.query.guid, condition: req.query.condition }, (err, change) => {
-            if (err) {
-                return res.send(err)
-            }
-
-            const indexOfMeasurementsUpdate = findUpdateIndex(change.measurements, req.query.dateTime)
-            change.measurements[indexOfMeasurementsUpdate] = { ...req.body, createdAt: req.query.dateTime }
-
-
-            change.markModified('measurements');
-            change.save();
-
-            res
-            return res.send('document updated')
-        });
-    }
-
-
-    function findUpdateIndex(measurements, dateTime) {
-        return measurements.findIndex((measurement) => {
-            return measurement.createdAt === dateTime
-        })
     }
 
     function deleteChange(req, res) {
@@ -61,22 +42,13 @@ function changesController(Change) {
             if (err) {
                 return res.send(err)
             }
-
-            const indexOfMeasurementsUpdate = findUpdateIndex(change.measurements, req.query.dateTime)
-            const measurementToDelete = change.measurements[indexOfMeasurementsUpdate];
-            if (measurementToDelete.isDeleted){
-                return res.send(404);
-            } 
-            change.measurements[indexOfMeasurementsUpdate] = { ...measurementToDelete, isDeleted: true}
-
-            change.markModified('measurements');
-            change.save();
+            updateChangeService.softDeleteMeasurement(req, change, res);
 
             return res.json('document deleted')
         });
     }
 
-    return { postChange, getChanges, updateChange, deleteChange };
+    return { postChange, getChanges, deleteChange };
 }
 
 module.exports = changesController;

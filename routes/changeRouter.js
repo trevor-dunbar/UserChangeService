@@ -8,13 +8,8 @@ function routes() {
     changeRouter.route('/changes')
         .post(controller.postChange)
         .get(controller.getChanges)
-        .put(controller.updateChange)
         .delete(controller.deleteChange)
 
-    // changeRouter.route('/changes/:guid/:')
-        // .get(controller.getChangeById)
-        // .put(controller.updateChange)
-        // .delete(controller.deleteChange)
     return changeRouter;
 }
 
