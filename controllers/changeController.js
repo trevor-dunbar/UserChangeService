@@ -7,10 +7,11 @@ function changesController(Change, getChangeService, postChangeService, updateCh
 
             const conditions = Object.entries(req.body);
 
-            if (conditions) {
+            if (conditions.length !== 0) {
 
                 conditions.forEach((condition) => { postChangeService.saveRecordForCondition(Change, guid, condition, res) })
-                return res.status(201).send();
+                res.status(201)
+                return res.send();
             }
         }
         res.status(400)
@@ -38,9 +39,14 @@ function changesController(Change, getChangeService, postChangeService, updateCh
             if (err) {
                 return res.send(err)
             }
-            updateChangeService.softDeleteMeasurement(req, change, res);
+            if (change) {
+                updateChangeService.softDeleteMeasurement(req, change, res);
+    
+                return res.json('document deleted')
+            }
 
-            return res.json('document deleted')
+            res.status(404)
+            return res.send('no record found with given query parameters');
         });
     }
 
