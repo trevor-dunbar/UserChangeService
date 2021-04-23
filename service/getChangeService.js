@@ -5,7 +5,6 @@ function buildResponseForCondition(change, response) {
     const weeklyMeasurements = {}
     const dailyMeasurements = {}
 
-    // const measurements = (({ guid, condition, _id, __v, ...o }) => o)(change._doc)
     const measurements = _.omit(change._doc, ['guid', 'condition', '_id', '__v'])
     
     addMeasurementsToDailyAndWeekly(measurements, dailyMeasurements, weeklyMeasurements);
@@ -43,5 +42,7 @@ function getWeeklyMeasurements(list) {
     })
 }
 
+const testables = { getDailyMeasurements, getWeeklyMeasurements};
 
-module.exports = { buildResponseForCondition }
+
+module.exports = { buildResponseForCondition, testables }

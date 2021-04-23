@@ -1,84 +1,62 @@
 const should = require('should');
 const sinon = require('sinon');
-const changesController = require('../controllers/changeController')
+const controller = require('../controllers/changeController')
 
-describe('changes controller tests', () => {
-      describe('post Change tests', () => {
-        it('should post a book', () => {
+describe('changes controller', () => {
+    describe('get changes', () => {
+        it('getChange should call getChangeService and add the result to response', () => {
             //given
-            const req = {
-                body: { bloodPressure: 5, guid: 123, anyOtherKey: "any val" }
-            }
-
+            const req = { query: { guid: '123' } }
             const res = {
-                status: sinon.spy(),
-                send: sinon.spy(),
                 json: sinon.spy()
             }
-            const Change = require('../models/changes')
-            const controller = changesController(Change);
-
-            //when
-            controller.postChange(req, res);
-
-
-            //then
-            const change = new Change(req.body)
-            res.status.calledWith(201).should.equal(true);
-            res.json.calledWith(sinon.match(req.body)).should.equal(true)
-        })
-
-        it('should not post a book without a guid', () => {
-            //given
-            const Change = function (change) { this.save = () => { } };
-
-            const req = {
-                body: { bloodPressure: 5 }
-            }
-
-            const res = {
-                status: sinon.spy(),
-                send: sinon.spy(),
-                json: sinon.spy()
-            }
-            const controller = changesController(Change);
-
-            //when
-            controller.postChange(req, res);
-
-            //then
-            res.status.calledWith(400).should.equal(true);
-            res.send.calledWith('guid is required').should.equal(true)
-        })
-    })
-    describe('Get changes tests', () => {
-        it('should return a list of changes', () => {
-            //given
-            const req = {
-                query: {bloodPressure: 42}
-            };
-
-            const res = {
-                send: sinon.spy(),
-                json: sinon.spy()
-            }
-
-            const dbResponse = [{bloodPressure: 42, _id: 123}];
+            const dbResponse = [{ guid: '123', condition: "diabetes", bloodPressure: 42, _id: 123 }];
 
             const Change = require('../models/changes')
             sinon.stub(Change, 'find');
-
             Change.find.yields(null, dbResponse);
 
-            const controller = changesController(Change);
+            const getChangeService = {
+                buildResponseForCondition: sinon.spy()
+            }
+
+            const changesController = controller(Change, getChangeService, null, null);
 
             //when
-            controller.getChanges(req, res)
+            changesController.getChanges(req, res)
 
             //then
-            res.json.calledWith(dbResponse).should.equal(true);
+            getChangeService.buildResponseForCondition.calledWith({ guid: '123', condition: "diabetes", bloodPressure: 42, _id: 123 }, {guid: '123'}).should.equal(true)
+            res.json.calledWith({guid: '123'}).should.equal(true)
+            sinon.restore()
+        })
 
-            Change.find.restore();
+        it('getChange should call getChangeService TWICE and add the result to response', () => {
+            //given
+            const req = { query: { guid: '123' } }
+            const res = {
+                json: sinon.spy()
+            }
+            const dbResponse = [{ guid: '123', condition: "diabetes", bloodPressure: 42, _id: 123 },
+            { guid: '123', condition: "heartDisease", bloodPressure: 42, _id: 123 }];
+
+            const Change = require('../models/changes')
+            sinon.stub(Change, 'find');
+            Change.find.yields(null, dbResponse);
+
+            const getChangeService = {
+                buildResponseForCondition: sinon.spy()
+            }
+
+            const changesController = controller(Change, getChangeService, null, null);
+
+            //when
+            changesController.getChanges(req, res)
+
+            //then
+            getChangeService.buildResponseForCondition.calledWith({ guid: '123', condition: 'diabetes', bloodPressure: 42, _id: 123 }, {guid: '123'}).should.equal(true)
+            getChangeService.buildResponseForCondition.calledWith({ guid: '123', condition: "heartDisease", bloodPressure: 42, _id: 123 }, {guid: '123'}).should.equal(true)
+            res.json.calledWith({guid: '123'}).should.equal(true)
         })
     })
 })

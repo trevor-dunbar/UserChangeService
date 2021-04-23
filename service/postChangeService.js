@@ -70,5 +70,7 @@ function addTimeForMeasurementArray(listOfMeasurements) {
     return arr;
 }
 
+const testables = { updateSavedRecord, createNewRecord }
 
-module.exports = { saveRecordForCondition }
+
+module.exports = { saveRecordForCondition, testables }

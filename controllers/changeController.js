@@ -1,8 +1,4 @@
-const postChangeService = require('../service/postChangeService');
-const getChangeService = require('../service/getChangeService');
-const updateChangeService = require('../service/updateChangeService')
-
-function changesController(Change) {
+function changesController(Change, getChangeService, postChangeService, updateChangeService) {
 
     function postChange(req, res) {
         const { guid } = req.body
