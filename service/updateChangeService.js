@@ -2,28 +2,28 @@ const _ = require('lodash');
 
 function softDeleteMeasurement(req, change, res) {
     const measurementsToDelete = Object.entries(req.body);
+    let shouldSave = false
 
     measurementsToDelete.forEach((measurementKeyValue) => {
-        markMeasurementAsDeleted(measurementKeyValue, change, res)
-    })
+        const measurementKey = measurementKeyValue[0];
+        const measurementValue = measurementKeyValue[1];
+        const measurementsForKey = change._doc[measurementKey]
 
-    change.save();
-}
+        const indexOfMeasurementsUpdate = findUpdateIndex(measurementsForKey, measurementValue)
+        const measurementToDelete = measurementsForKey[indexOfMeasurementsUpdate];
 
-function markMeasurementAsDeleted(measurementKeyValue, change, res) {
-    const measurementKey = measurementKeyValue[0];
-    const measurementValue = measurementKeyValue[1];
-    const measurementsForKey = change._doc[measurementKey]
+        if (indexOfMeasurementsUpdate == -1 || measurementToDelete.isDeleted) {
+            return res.send(404);
+        }
 
-    const indexOfMeasurementsUpdate = findUpdateIndex(measurementsForKey, measurementValue)
-    const measurementToDelete = measurementsForKey[indexOfMeasurementsUpdate];
+        measurementsForKey[indexOfMeasurementsUpdate] = { ...measurementToDelete, isDeleted: true }
+        shouldSave = true
+        change.markModified(measurementKey);
+        })
 
-    if (indexOfMeasurementsUpdate == -1 || measurementToDelete.isDeleted) {
-        return res.send(404);
-    }
-
-    measurementsForKey[indexOfMeasurementsUpdate] = { ...measurementToDelete, isDeleted: true }
-    change.markModified(measurementKey);
+        if (shouldSave){
+            change.save();
+        }
 }
 
 function findUpdateIndex(listOfMeasurements, measurementToDelete) {

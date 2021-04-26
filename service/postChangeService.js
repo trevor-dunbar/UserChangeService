@@ -70,7 +70,7 @@ function addTimeForMeasurementArray(listOfMeasurements) {
     return arr;
 }
 
-const testables = { updateSavedRecord, createNewRecord }
+const testables = { createDBOBject }
 
 
 module.exports = { saveRecordForCondition, testables }
