@@ -54,7 +54,7 @@ describe('update change service', () => {
             //then
             change.save.calledOnce.should.equal(false);
             change.markModified.calledOnce.should.equal(false)
-            res.send.calledWith(404).should.equal(true)
+            res.status.calledWith(404).should.equal(true)
             sinon.restore()
         })
     })

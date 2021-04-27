@@ -13,7 +13,7 @@ function softDeleteMeasurement(req, change, res) {
         const measurementToDelete = measurementsForKey[indexOfMeasurementsUpdate];
 
         if (indexOfMeasurementsUpdate == -1 || measurementToDelete.isDeleted) {
-            return res.send(404);
+            return res.status(404)
         }
 
         measurementsForKey[indexOfMeasurementsUpdate] = { ...measurementToDelete, isDeleted: true }

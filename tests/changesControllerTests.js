@@ -155,6 +155,34 @@ describe("changes controller", () => {
   });
 
   describe("delete Change", () => {
+    it("should send a document deleted and call update Change Service", () => {
+      //given
+      const req = {
+        query: { guid: "abc123", condition: "diabetes" },
+        body: { bloodSugar: {key: 'val'} },
+      };
+      const res = { send: sinon.spy() };
+      const dbResponse = { guid: "123", condition: "diabetes", bloodSugar: {key: 'val'}, _id: 123 };
+
+      const Change = require("../models/changes");
+      sinon.stub(Change, "findOne");
+      Change.findOne.yields(null, dbResponse);
+
+      const updateChangeService = {
+        softDeleteMeasurement: sinon.spy(),
+      };
+
+      const changesController = controller(Change, null, null, updateChangeService);
+
+      //when
+      changesController.deleteChange(req, res);
+
+      //then
+      updateChangeService.softDeleteMeasurement.calledWith(req, dbResponse, res).should.equal(true);
+      res.send.calledOnce.should.equal(true);
+      sinon.restore();
+    });
+
     it("should send a 404 if the changes isnt found", () => {
       //given
       const req = {
@@ -179,32 +207,66 @@ describe("changes controller", () => {
         .should.equal(true);
       sinon.restore();
     });
-   
-    it("should send a document deleted and call update Change Service", () => {
+
+    it("should send a 400 if there is no guid in the query params", () => {
       //given
       const req = {
-        query: { guid: "abc123", condition: "diabetes" },
-        body: { bloodSugar: {key: 'val'} },
+        query: { condition: "diabetes" },
+        body: { bloodSugar: {} },
       };
-      const res = { json: sinon.spy() };
-      const dbResponse = { guid: "123", condition: "diabetes", bloodSugar: {key: 'val'}, _id: 123 };
+      const res = { status: sinon.spy(), send: sinon.spy() };
 
-      const Change = require("../models/changes");
-      sinon.stub(Change, "findOne");
-      Change.findOne.yields(null, dbResponse);
-
-      const updateChangeService = {
-        softDeleteMeasurement: sinon.spy(),
-      };
-
-      const changesController = controller(Change, null, null, updateChangeService);
+      const changesController = controller(null, null, null, null);
 
       //when
       changesController.deleteChange(req, res);
 
       //then
-      updateChangeService.softDeleteMeasurement.calledWith(req, dbResponse, res).should.equal(true);
-     res.json.calledWith('document deleted').should.equal(true);
+      res.status.calledWith(400).should.equal(true);
+      res.send
+        .calledWith("guid and condition are required")
+        .should.equal(true);
+      sinon.restore();
+    });
+    
+    it("should send a 400 if there is no condition in the query params", () => {
+      //given
+      const req = {
+        query: { guid: '123' },
+        body: { bloodSugar: {} },
+      };
+      const res = { status: sinon.spy(), send: sinon.spy() };
+
+      const changesController = controller(null, null, null, null);
+
+      //when
+      changesController.deleteChange(req, res);
+
+      //then
+      res.status.calledWith(400).should.equal(true);
+      res.send
+        .calledWith("guid and condition are required")
+        .should.equal(true);
+      sinon.restore();
+    });
+    
+    it("should send a 400 if there is no req body", () => {
+      //given
+      const req = {
+        query: { guid: '123', condition: 'diabetes' },
+      };
+      const res = { status: sinon.spy(), send: sinon.spy() };
+
+      const changesController = controller(null, null, null, null);
+
+      //when
+      changesController.deleteChange(req, res);
+
+      //then
+      res.status.calledWith(400).should.equal(true);
+      res.send
+        .calledWith("request body requires a record to delete")
+        .should.equal(true);
       sinon.restore();
     });
   });

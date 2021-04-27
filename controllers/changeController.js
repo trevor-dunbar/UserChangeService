@@ -35,18 +35,27 @@ function changesController(Change, getChangeService, postChangeService, updateCh
     }
 
     function deleteChange(req, res) {
+        if (req.query.guid == undefined || req.query.condition == undefined){
+            res.status(400)
+            return res.send('guid and condition are required')
+        }
+        if ( typeof req.body !== 'object' || Object.keys(req.body).length === 0 ){
+            res.status(400)
+            return res.send('request body requires a record to delete')
+        }
+
         Change.findOne({ guid: req.query.guid, condition: req.query.condition }, (err, change) => {
             if (err) {
                 return res.send(err)
             }
             if (change) {
                 updateChangeService.softDeleteMeasurement(req, change, res);
-    
-                return res.json('document deleted')
+                return res.send()
             }
-
-            res.status(404)
-            return res.send('no record found with given query parameters');
+            else {
+                res.status(404)
+                return res.send('no record found with given query parameters');
+            }
         });
     }
 
