@@ -4,7 +4,7 @@ const controller = require("../controllers/changeController");
 
 describe("changes controller", () => {
   describe("get changes", () => {
-    it("getChange should call getChangeService and add the result to response", () => {
+    it("getChange should call getChangeService and add the result to response", async () => {
       //given
       const req = { query: { guid: "123" } };
       const res = {
@@ -16,7 +16,7 @@ describe("changes controller", () => {
 
       const Change = require("../models/changes");
       sinon.stub(Change, "find");
-      Change.find.yields(null, dbResponse);
+      Change.find.resolves(dbResponse);
 
       const getChangeService = {
         buildResponseForCondition: sinon.spy(),
@@ -30,7 +30,7 @@ describe("changes controller", () => {
       );
 
       //when
-      changesController.getChanges(req, res);
+      await changesController.getChanges(req, res);
 
       //then
       getChangeService.buildResponseForCondition
@@ -43,7 +43,7 @@ describe("changes controller", () => {
       sinon.restore();
     });
 
-    it("getChange should call getChangeService TWICE and add the result to response", () => {
+    it("getChange should call getChangeService TWICE and add the result to response", async () => {
       //given
       const req = { query: { guid: "123" } };
       const res = {
@@ -56,7 +56,7 @@ describe("changes controller", () => {
 
       const Change = require("../models/changes");
       sinon.stub(Change, "find");
-      Change.find.yields(null, dbResponse);
+      Change.find.resolves(dbResponse);
 
       const getChangeService = {
         buildResponseForCondition: sinon.spy(),
@@ -70,7 +70,7 @@ describe("changes controller", () => {
       );
 
       //when
-      changesController.getChanges(req, res);
+      await changesController.getChanges(req, res);
 
       //then
       getChangeService.buildResponseForCondition
@@ -91,6 +91,32 @@ describe("changes controller", () => {
         )
         .should.equal(true);
       res.json.calledWith({ guid: "123" }).should.equal(true);
+      sinon.restore();
+    });
+
+    it("should call send the error in the response if one occurs", async () => {
+      //given
+      const req = { query: { guid: "123" } };
+      const res = {
+        send: sinon.spy(),
+      };
+
+      const Change = require("../models/changes");
+      const err = new Error("boom");
+      sinon.stub(Change, "find").throws(err);
+
+      const changesController = controller(
+        Change,
+        null,
+        null,
+        null
+      );
+
+      //when
+      await changesController.getChanges(req, res);
+
+      //then
+      res.send.calledWith(err).should.equal(true);
       sinon.restore();
     });
   });
@@ -155,7 +181,7 @@ describe("changes controller", () => {
   });
 
   describe("delete Change", () => {
-    it("should send a document deleted and call update Change Service", () => {
+    it("should send a document deleted and call update Change Service", async () => {
       //given
       const req = {
         query: { guid: "abc123", condition: "diabetes" },
@@ -165,8 +191,7 @@ describe("changes controller", () => {
       const dbResponse = { guid: "123", condition: "diabetes", bloodSugar: {key: 'val'}, _id: 123 };
 
       const Change = require("../models/changes");
-      sinon.stub(Change, "findOne");
-      Change.findOne.yields(null, dbResponse);
+      sinon.stub(Change, "findOne").resolves(dbResponse);
 
       const updateChangeService = {
         softDeleteMeasurement: sinon.spy(),
@@ -175,15 +200,37 @@ describe("changes controller", () => {
       const changesController = controller(Change, null, null, updateChangeService);
 
       //when
-      changesController.deleteChange(req, res);
+      await changesController.deleteChange(req, res);
 
       //then
       updateChangeService.softDeleteMeasurement.calledWith(req, dbResponse, res).should.equal(true);
       res.send.calledOnce.should.equal(true);
       sinon.restore();
     });
+    
+    it("should send an err to response when fineOne throws an error", async () => {
+      //given
+      const req = {
+        query: { guid: "abc123", condition: "diabetes" },
+        body: { bloodSugar: {key: 'val'} },
+      };
+      const res = { send: sinon.spy() };
 
-    it("should send a 404 if the changes isnt found", () => {
+      const err = new Error('Boom');
+      const Change = require("../models/changes");
+      sinon.stub(Change, "findOne").throws(err);
+
+      const changesController = controller(Change, null, null, null);
+
+      //when
+      await changesController.deleteChange(req, res);
+
+      //then
+      res.send.calledWith(err).should.equal(true);
+      sinon.restore();
+    });
+
+    it("should send a 404 if the changes isnt found", async () => {
       //given
       const req = {
         query: { guid: "abc123", condition: "diabetes" },
@@ -192,25 +239,22 @@ describe("changes controller", () => {
       const res = { status: sinon.spy(), send: sinon.spy() };
 
       const Change = require("../models/changes");
-      sinon.stub(Change, "findOne");
-      Change.findOne.yields(null, null);
+      sinon.stub(Change, "findOne").resolves(null);
 
       const changesController = controller(Change, null, null, null);
 
       //when
-      changesController.deleteChange(req, res);
+      await changesController.deleteChange(req, res);
 
       //then
       res.status.calledWith(404).should.equal(true);
-      res.send
-        .calledWith("no record found with given query parameters")
-        .should.equal(true);
+      res.send.calledWith("no record found with given query parameters").should.equal(true);
       sinon.restore();
     });
 
     it("should send a 400 if there is no guid in the query params", () => {
       //given
-      const req = {
+      const reqWithoutGuid = {
         query: { condition: "diabetes" },
         body: { bloodSugar: {} },
       };
@@ -219,19 +263,17 @@ describe("changes controller", () => {
       const changesController = controller(null, null, null, null);
 
       //when
-      changesController.deleteChange(req, res);
+      changesController.deleteChange(reqWithoutGuid, res);
 
       //then
       res.status.calledWith(400).should.equal(true);
-      res.send
-        .calledWith("guid and condition are required")
-        .should.equal(true);
+      res.send.calledWith("guid and condition are required").should.equal(true);
       sinon.restore();
     });
     
     it("should send a 400 if there is no condition in the query params", () => {
       //given
-      const req = {
+      const reqWithoutCondition = {
         query: { guid: '123' },
         body: { bloodSugar: {} },
       };
@@ -240,19 +282,17 @@ describe("changes controller", () => {
       const changesController = controller(null, null, null, null);
 
       //when
-      changesController.deleteChange(req, res);
+      changesController.deleteChange(reqWithoutCondition, res);
 
       //then
       res.status.calledWith(400).should.equal(true);
-      res.send
-        .calledWith("guid and condition are required")
-        .should.equal(true);
+      res.send.calledWith("guid and condition are required").should.equal(true);
       sinon.restore();
     });
     
     it("should send a 400 if there is no req body", () => {
       //given
-      const req = {
+      const reqWithoutBody = {
         query: { guid: '123', condition: 'diabetes' },
       };
       const res = { status: sinon.spy(), send: sinon.spy() };
@@ -260,13 +300,11 @@ describe("changes controller", () => {
       const changesController = controller(null, null, null, null);
 
       //when
-      changesController.deleteChange(req, res);
+      changesController.deleteChange(reqWithoutBody, res);
 
       //then
       res.status.calledWith(400).should.equal(true);
-      res.send
-        .calledWith("request body requires a record to delete")
-        .should.equal(true);
+      res.send.calledWith("request body requires a record to delete").should.equal(true);
       sinon.restore();
     });
   });

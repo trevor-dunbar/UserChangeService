@@ -18,36 +18,35 @@ function changesController(Change, getChangeService, postChangeService, updateCh
         return res.send('guid and condition are required');
     }
 
-    function getChanges(req, res) {
+    async function getChanges(req, res) {
         const { query } = req;
         const response = { guid: query.guid };
-        Change.find(query, (err, changes) => {
-            if (err) {
-                return res.send(err)
-            }
+        try {
+            const changes = await Change.find(query)
 
             changes.forEach((change) => {
                 getChangeService.buildResponseForCondition(change, response)
             })
 
             return res.json(response);
-        });
+        }
+        catch (err) {
+            console.log(err)
+            return res.send(err)
+        }
     }
 
-    function deleteChange(req, res) {
-        if (req.query.guid == undefined || req.query.condition == undefined){
+    async function deleteChange(req, res) {
+        if (req.query.guid == undefined || req.query.condition == undefined) {
             res.status(400)
             return res.send('guid and condition are required')
         }
-        if ( typeof req.body !== 'object' || Object.keys(req.body).length === 0 ){
+        if (typeof req.body !== 'object' || Object.keys(req.body).length === 0) {
             res.status(400)
             return res.send('request body requires a record to delete')
         }
-
-        Change.findOne({ guid: req.query.guid, condition: req.query.condition }, (err, change) => {
-            if (err) {
-                return res.send(err)
-            }
+        try {
+            const change = await  Change.findOne({ guid: req.query.guid, condition: req.query.condition })
             if (change) {
                 updateChangeService.softDeleteMeasurement(req, change, res);
                 return res.send()
@@ -56,7 +55,10 @@ function changesController(Change, getChangeService, postChangeService, updateCh
                 res.status(404)
                 return res.send('no record found with given query parameters');
             }
-        });
+        } catch (err) {
+            return res.send(err)
+        }
+
     }
 
     return { postChange, getChanges, deleteChange };

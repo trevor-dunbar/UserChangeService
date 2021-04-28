@@ -1,34 +1,27 @@
-function saveRecordForCondition(Change, guid, condition, res) {
-    Change.findOne({ guid, condition: condition[0] }, (err, change) => {
+async function saveRecordForCondition(Change, guid, condition, res) {
+    try {
 
-        if (err) {
-            return res.send(err);
-        }
-
-        change ? updateSavedRecord(Change, guid, condition, res) : createNewRecord(Change, guid, condition, res);
-    })
+        const change = await Change.findOne({ guid, condition: condition[0] })
+        change ? updateSavedRecord(Change, guid, condition) : createNewRecord(Change, guid, condition);
+        
+    } catch (err) {
+        return res.send(err);
+    }
 }
 
-function updateSavedRecord(Change, guid, condition, res) {
+function updateSavedRecord(Change, guid, condition) {
 
     const updateObject = createDBOBject(condition, true)
 
     Change.findOneAndUpdate({ guid, condition: condition[0] },
-        { $push: { ...updateObject } },
-        (err, change) => {
-            if (err) {
-                console.log(err)
-                return res.send(err);
-            }
-        })
+        { $push: { ...updateObject } }
+        )
 }
 
-function createNewRecord(Change, guid, condition, res) {
+function createNewRecord(Change, guid, condition) {
     const newChange = new Change({ guid, condition: condition[0], ...createDBOBject(condition, false) })
 
-    newChange.save((err) => {
-        if (err) return res.send(err);
-    });
+    newChange.save();
 }
 
 function createDBOBject(condition, isUpdate) {

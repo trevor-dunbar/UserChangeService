@@ -4,53 +4,122 @@ const sinon = require("sinon");
 
 describe("postChangeServiceTests", () => {
   describe("saveRecordForCondition", () => {
-    it("should update a record when it finds one", () => {
+    it("should update a record when it finds one", async () => {
       //given
       const dbResponse = {
         guid: "123",
         condition: "diabetes",
         toDo: [{taskOne: {}}]
       };
+
       const Change = require("../models/changes");
-      sinon.stub(Change, 'findOne');
+      sinon.stub(Change, 'findOne').resolves(dbResponse);
       sinon.spy(Change, 'findOneAndUpdate')
 
-    Change.findOne.yields(null, dbResponse);
     const res = {
         send: sinon.spy(),
         json: sinon.spy(),
     };
     
     //when
-    postChangeService.saveRecordForCondition( Change, "123", ["diabetes", { toDo: [{ dateTime: "now" }] }], res  );
+    await postChangeService.saveRecordForCondition( Change, "123", ["diabetes", { toDo: [{ dateTime: "now" }] }], res  );
 
     
     //then
-    Change.findOneAndUpdate.calledWith({ guid: '123', condition: 'diabetes' }, sinon.match.object, sinon.match.any).should.equal(true)
+    Change.findOneAndUpdate.calledWith({ guid: '123', condition: 'diabetes' }, sinon.match.object).should.equal(true)
     Change.findOne.restore()
     Change.findOneAndUpdate.restore()
     });
 
-    it('should CREATE a record when it DOES NOT finds one', () => {
+    it('should CREATE a record when it DOES NOT finds one', async () => {
         //given
         const Change = require('../models/changes')
         const save = sinon.stub(Change.prototype, 'save');
-        const stub = sinon.stub(Change);
-
-        Change.findOne.yields(null, null);
+        const stub = sinon.stub(Change, 'findOne').resolves(null);
         const res = {
             send: sinon.spy(),
             json: sinon.spy()
         }
 
         //when
-        postChangeService.saveRecordForCondition(Change, '123', ['diabetes', { toDo: [{ dateTime: "now" }] }], res)
+        await postChangeService.saveRecordForCondition(Change, '123', ['diabetes', { toDo: [{ dateTime: "now" }] }], res)
 
         //then
-        sinon.assert.notCalled(Change.findOneAndUpdate)
         save.calledOnce.should.equal(true)
         Change.findOne.restore()
         Change.prototype.save.restore();
+    })
+
+    it('should send the error in the response when find one throws an error', async () => {
+      //given
+      const error = new Error('Boom')
+
+      const Change = require('../models/changes')
+      const stub = sinon.stub(Change, 'findOne').throws(error);
+
+      const res = {
+          send: sinon.spy(),
+          json: sinon.spy()
+      }
+
+      //when
+      await postChangeService.saveRecordForCondition(Change, '123', ['diabetes', { toDo: [{ dateTime: "now" }] }], res)
+
+      //then
+      res.send.calledWith(error).should.equal(true)
+      Change.findOne.restore()
+    })
+    
+    it('should send the error in the response when find one and update throws an error', async () => {
+      //given
+      const Change = require('../models/changes')
+      const stub = sinon.stub(Change);
+
+      const error = new Error('Boom')
+      const dbResponse = {
+        guid: "123",
+        condition: "diabetes",
+        toDo: [{taskOne: {}}]
+      };
+
+      Change.findOne.resolves(dbResponse);
+      Change.findOneAndUpdate.throws(error)
+
+      const res = {
+          send: sinon.spy(),
+          json: sinon.spy()
+      }
+
+      //when
+      await postChangeService.saveRecordForCondition(Change, '123', ['diabetes', { toDo: [{ dateTime: "now" }] }], res)
+
+      //then
+      res.send.calledWith(error).should.equal(true)
+      Change.findOne.restore()
+      Change.findOneAndUpdate.restore()
+    })
+
+    it('should send the error in the response when save throws an error', async () => {
+      //given
+      const Change = require('../models/changes')
+      const stub = sinon.stub(Change, 'findOne').resolves(null);
+      const save = sinon.stub(Change.prototype, 'save')
+      const error = new Error('Boom')
+
+      save.throws(error)
+
+      const res = {
+          send: sinon.spy(),
+          json: sinon.spy()
+      }
+
+      //when
+      await postChangeService.saveRecordForCondition(Change, '123', ['diabetes', { toDo: [{ dateTime: "now" }] }], res)
+
+      //then
+      res.send.calledWith(error).should.equal(true)
+      Change.findOne.restore()
+      Change.prototype.save.restore()
     })
   });
   describe('create DB object', () => {
@@ -58,7 +127,7 @@ describe("postChangeServiceTests", () => {
       //given
       const { testables } = require('../service/postChangeService');
       const conditionKeyValue = ['diabetes', { bloodSugar: [{bloodSugarLevel: 123}, {bloodSugarLevel: 456}]}]
-      const clock = sinon.useFakeTimers(new Date(2016,11,1).getTime()); //LAST THING 
+      const clock = sinon.useFakeTimers(new Date(2016,11,1).getTime());  
 
       const expected = {
         bloodSugar: {
