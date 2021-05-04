@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon app.js",
-    "test": "mocha tests/**/*Tests.js"
+    "test": "nyc mocha tests/**/*Tests.js"
   },
   "author": "",
   "license": "ISC",
@@ -32,5 +32,8 @@
       "NODE_ENV": "development",
       "PORT": 3000
     }
+  },
+  "devDependencies": {
+    "nyc": "^15.1.0"
   }
 }
